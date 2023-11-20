@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * Created by IntelliJ IDEA.
  * Project : springboot-jwt-auth
@@ -35,5 +37,12 @@ public class UserController {
         User currentUser = (User) authentication.getPrincipal();
 
         return ResponseEntity.ok(currentUser);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<User>> allUsers() {
+        List<User> users = userService.allUsers();
+
+        return ResponseEntity.ok(users);
     }
 }
