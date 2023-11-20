@@ -1,7 +1,9 @@
 package com.hendisantika.springbootjwtauth.controller;
 
+import com.hendisantika.springbootjwtauth.dto.LoginUserDto;
 import com.hendisantika.springbootjwtauth.dto.RegisterUserDto;
 import com.hendisantika.springbootjwtauth.entity.User;
+import com.hendisantika.springbootjwtauth.response.LoginResponse;
 import com.hendisantika.springbootjwtauth.service.AuthenticationService;
 import com.hendisantika.springbootjwtauth.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +37,16 @@ public class AuthenticationController {
         User registeredUser = authenticationService.signup(registerUserDto);
 
         return ResponseEntity.ok(registeredUser);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto) {
+        User authenticatedUser = authenticationService.authenticate(loginUserDto);
+
+        String jwtToken = jwtService.generateToken(authenticatedUser);
+
+        LoginResponse loginResponse = new LoginResponse().setToken(jwtToken).setExpiresIn(jwtService.getExpirationTime());
+
+        return ResponseEntity.ok(loginResponse);
     }
 }
