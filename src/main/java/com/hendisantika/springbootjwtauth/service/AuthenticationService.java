@@ -1,10 +1,12 @@
 package com.hendisantika.springbootjwtauth.service;
 
+import com.hendisantika.springbootjwtauth.dto.LoginUserDto;
 import com.hendisantika.springbootjwtauth.dto.RegisterUserDto;
 import com.hendisantika.springbootjwtauth.entity.User;
 import com.hendisantika.springbootjwtauth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,5 +34,16 @@ public class AuthenticationService {
                 .setPassword(passwordEncoder.encode(input.getPassword()));
 
         return userRepository.save(user);
+    }
+
+    public User authenticate(LoginUserDto input) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        input.getEmail(),
+                        input.getPassword()
+                )
+        );
+
+        return userRepository.findByEmail(input.getEmail()).orElseThrow();
     }
 }
