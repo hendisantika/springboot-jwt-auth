@@ -1,5 +1,7 @@
 package com.hendisantika.springbootjwtauth.service;
 
+import com.hendisantika.springbootjwtauth.dto.RegisterUserDto;
+import com.hendisantika.springbootjwtauth.entity.User;
 import com.hendisantika.springbootjwtauth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,4 +24,13 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+
+    public User signup(RegisterUserDto input) {
+        var user = new User()
+                .setFullName(input.getFullName())
+                .setEmail(input.getEmail())
+                .setPassword(passwordEncoder.encode(input.getPassword()));
+
+        return userRepository.save(user);
+    }
 }
