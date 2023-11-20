@@ -1,9 +1,14 @@
 package com.hendisantika.springbootjwtauth.controller;
 
+import com.hendisantika.springbootjwtauth.dto.RegisterUserDto;
+import com.hendisantika.springbootjwtauth.entity.User;
 import com.hendisantika.springbootjwtauth.service.AuthenticationService;
 import com.hendisantika.springbootjwtauth.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,4 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<User> register(@RequestBody RegisterUserDto registerUserDto) {
+        User registeredUser = authenticationService.signup(registerUserDto);
+
+        return ResponseEntity.ok(registeredUser);
+    }
 }
