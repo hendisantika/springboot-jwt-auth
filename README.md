@@ -53,42 +53,104 @@ src/main/java/com/hendisantika/springbootjwtauth/
 
 ## Prerequisites
 
+### Local Development
 - Java 21 or higher
 - Maven 3.6+
 - MySQL 8.0+
 - IDE (IntelliJ IDEA, Eclipse, VS Code)
 
+### Docker Development
+
+- Docker 20.10+
+- Docker Compose 2.0+
+
 ## Setup Instructions
 
-### 1. Clone the Repository
+### Option 1: Docker Setup (Recommended)
+
+#### 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd springboot-jwt-auth
 ```
 
-### 2. Database Configuration
+#### 2. Run with Docker Compose
+
+```bash
+# Start all services (MySQL + Spring Boot App + PhpMyAdmin)
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f app
+
+# Stop all services
+docker-compose down
+
+# Remove volumes (to reset database)
+docker-compose down -v
+```
+
+The application will be available at:
+
+- **Spring Boot App**: `http://localhost:8081`
+- **PhpMyAdmin**: `http://localhost:8080` (Database: `jwt_auth_db`, User: `yu71`, Password: `53cret`)
+- **MySQL**: `localhost:3306` (User: `yu71`, Password: `53cret`)
+
+#### 3. Docker Commands
+
+```bash
+# Build only the application image
+docker build -t jwt-auth-app .
+
+# Run only the application (assuming MySQL is running separately)
+docker run -p 8081:8081 \
+  -e SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/jwt_auth_db \
+  -e SPRING_DATASOURCE_USERNAME=yu71 \
+  -e SPRING_DATASOURCE_PASSWORD=53cret \
+  jwt-auth-app
+
+# View application logs
+docker-compose logs -f app
+
+# Access MySQL container
+docker-compose exec mysql mysql -u yu71 -p53cret jwt_auth_db
+```
+
+### Option 2: Local Development Setup
+
+#### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd springboot-jwt-auth
+```
+
+#### 2. Database Configuration
 
 Create a MySQL database and update the connection properties in `src/main/resources/application.properties`:
 
 ```properties
-# Database Configuration
+# Database Configuration for MySQL 9.4.0
 spring.datasource.url=jdbc:mysql://localhost:3306/jwt_auth_db
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+spring.datasource.username=yu71
+spring.datasource.password=53cret
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
 # JPA/Hibernate Configuration
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
 # JWT Configuration
 security.jwt.secret-key=your-secret-key-here
 security.jwt.expiration-time=86400000
+
 # Server Configuration
 server.port=8081
 ```
 
-### 3. Build and Run
+#### 3. Build and Run
 
 ```bash
 # Clean and compile the project
@@ -192,6 +254,19 @@ The application includes comprehensive error handling for:
 
 ## Testing
 
+### Docker Health Checks
+
+```bash
+# Check application health
+curl http://localhost:8081/actuator/health
+
+# Check database connectivity
+docker-compose exec mysql mysqladmin ping -h localhost -u yu71 -p53cret
+
+# View container status
+docker-compose ps
+```
+
 ### Manual Testing with curl
 
 #### Register a new user:
@@ -224,6 +299,26 @@ curl -X GET http://localhost:8081/users/me \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
+### Docker Testing Commands
+
+```bash
+# Test with Docker services running
+docker-compose up -d
+
+# Wait for services to be healthy
+docker-compose ps
+
+# Run the curl commands above
+# ...
+
+# Check logs if needed
+docker-compose logs app
+docker-compose logs mysql
+
+# Clean up
+docker-compose down
+```
+
 ## Configuration Options
 
 ### JWT Settings
@@ -252,9 +347,45 @@ curl -X GET http://localhost:8081/users/me \
 
 ### Common Issues
 
+#### Local Development
 - **Lombok not working**: Ensure annotation processing is enabled in your IDE
 - **Database connection failed**: Check MySQL is running and credentials are correct
 - **Token validation failed**: Verify secret key configuration matches
+
+#### Docker Issues
+
+- **Container won't start**: Check logs with `docker-compose logs [service-name]`
+- **Database connection timeout**: Wait for MySQL container to be fully ready (check health status)
+- **Port already in use**: Stop existing services or change ports in docker-compose.yml
+- **Out of disk space**: Clean up unused Docker resources with `docker system prune -a`
+- **MySQL authentication issues**: Ensure MySQL user `yu71` has proper permissions
+
+#### Docker Troubleshooting Commands
+
+```bash
+# Check container status
+docker-compose ps
+
+# View logs for specific service
+docker-compose logs -f app
+docker-compose logs -f mysql
+
+# Restart specific service
+docker-compose restart app
+
+# Rebuild application image
+docker-compose build app
+
+# Reset everything (warning: deletes data)
+docker-compose down -v
+docker-compose up -d
+
+# Access application container shell
+docker-compose exec app sh
+
+# Access MySQL container
+docker-compose exec mysql mysql -u yu71 -p53cret jwt_auth_db
+```
 
 ## Contributing
 

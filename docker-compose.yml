@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:9.4.0
+    container_name: jwt-auth-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 53cret
+      MYSQL_DATABASE: jwt_auth_db
+      MYSQL_USER: yu71
+      MYSQL_PASSWORD: 53cret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - jwt-auth-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "yu71", "-p53cret" ]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 40s
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Spring Boot Application Service
+  app:
+    build: .
+    container_name: jwt-auth-app
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/jwt_auth_db
+      SPRING_DATASOURCE_USERNAME: yu71
+      SPRING_DATASOURCE_PASSWORD: 53cret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SECURITY_JWT_SECRET_KEY: mySecretKey123456789mySecretKey123456789
+      SECURITY_JWT_EXPIRATION_TIME: 86400000
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - jwt-auth-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # PhpMyAdmin for database management (optional)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: jwt-auth-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: yu71
+      PMA_PASSWORD: 53cret
+      MYSQL_ROOT_PASSWORD: 53cret
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - jwt-auth-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  jwt-auth-network:
+    driver: bridge
