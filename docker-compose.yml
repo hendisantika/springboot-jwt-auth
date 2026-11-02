@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MySQL Database Service
   mysql:
-    image: mysql:9.4.0
+    image: mysql:26.10.0
     container_name: jwt-auth-mysql
     restart: unless-stopped
     environment:
