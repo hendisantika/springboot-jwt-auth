@@ -1,5 +1,10 @@
 # Spring Boot JWT Authentication
 
+[![Java CI with Maven](https://github.com/hendisantika/springboot-jwt-auth/actions/workflows/maven.yml/badge.svg)](https://github.com/hendisantika/springboot-jwt-auth/actions/workflows/maven.yml)
+![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-6DB33F?logo=springboot)
+![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
+
 A comprehensive Spring Boot application demonstrating JWT (JSON Web Token) based authentication and authorization.
 
 ## Features
@@ -15,15 +20,17 @@ A comprehensive Spring Boot application demonstrating JWT (JSON Web Token) based
 
 ## Technology Stack
 
-- **Java 21**: Latest LTS version of Java
-- **Spring Boot 3.5.6**: Latest Spring Boot framework
-- **Spring Security**: For authentication and authorization
+- **Java 25**: Latest LTS version of Java
+- **Spring Boot 4.1.2**: Latest Spring Boot framework
+- **Spring Security 7**: For authentication and authorization (lambda DSL configuration)
 - **Spring Data JPA**: For database operations
 - **MySQL**: Relational database for data persistence
-- **JWT (JSON Web Token)**: For stateless authentication
+- **JWT (JSON Web Token)**: For stateless authentication (JJWT 0.13.0)
 - **Lombok**: For reducing boilerplate code
-- **Maven**: Build and dependency management
+- **Maven 3.10 (Maven Wrapper)**: Build and dependency management
 - **Hibernate**: ORM framework
+- **Docker**: Multi-stage image based on `eclipse-temurin:25`
+- **GitHub Actions + Dependabot**: CI and automated dependency updates
 
 ## Project Structure
 
@@ -54,9 +61,9 @@ src/main/java/com/hendisantika/springbootjwtauth/
 ## Prerequisites
 
 ### Local Development
-- Java 21 or higher
-- Maven 3.6+
-- MySQL 8.0+
+- Java 25 (JDK 25 LTS, e.g. Eclipse Temurin)
+- Maven 3.9+ (or simply use the bundled Maven Wrapper `./mvnw`)
+- MySQL 8.0+ (MySQL 9.4.0 is used in Docker & CI)
 - IDE (IntelliJ IDEA, Eclipse, VS Code)
 
 ### Docker Development
@@ -153,11 +160,17 @@ server.port=8081
 #### 3. Build and Run
 
 ```bash
+# Make sure JDK 25 is active
+java -version
+
 # Clean and compile the project
-mvn clean compile
+./mvnw clean compile
+
+# Run the tests (requires the MySQL database configured above)
+./mvnw verify
 
 # Run the application
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 The application will start on `http://localhost:8081`
@@ -319,6 +332,31 @@ docker-compose logs mysql
 docker-compose down
 ```
 
+## Continuous Integration
+
+GitHub Actions workflow: [`.github/workflows/maven.yml`](.github/workflows/maven.yml). It runs on every push / pull request to `main` (and manually via *workflow_dispatch*):
+
+| Job                  | Description                                                                                                  |
+|----------------------|--------------------------------------------------------------------------------------------------------------|
+| **Build & Test**     | Sets up **JDK 25 (Temurin)** with Maven cache, starts a **MySQL 9.4.0** service container and runs `./mvnw -B verify`. Surefire reports are uploaded when tests fail. |
+| **Docker image build** | Builds the `Dockerfile` with Buildx (GHA layer cache) to make sure the image still builds. Image is not pushed. |
+| **Dependency graph** | On push to `main` only, submits the Maven dependency graph to GitHub for better Dependabot alerts.          |
+
+Concurrent runs on the same ref are cancelled automatically, and the workflow uses least-privilege `permissions`.
+
+## Dependency Updates (Dependabot)
+
+Configured in [`.github/dependabot.yml`](.github/dependabot.yml) (all schedules in `Asia/Jakarta` timezone):
+
+| Ecosystem          | Schedule        | Grouping / Notes                                                                           | Commit prefix   |
+|--------------------|-----------------|--------------------------------------------------------------------------------------------|-----------------|
+| `maven`            | daily 05:00     | Groups: `spring-boot`, `jjwt`, `maven-plugins`, `test-dependencies`; cooldown 3 days (14 days for majors) | `build(deps)`   |
+| `github-actions`   | weekly (Monday) | All actions grouped into one PR                                                            | `ci(deps)`      |
+| `docker`           | weekly (Monday) | `eclipse-temurin` stays on Java 25 (major bumps ignored)                                   | `build(docker)` |
+| `docker-compose`   | weekly (Monday) | `mysql`, `phpmyadmin` images                                                               | `build(docker)` |
+
+Every Dependabot PR is labelled (`dependencies` + ecosystem label) and validated by the CI workflow above.
+
 ## Configuration Options
 
 ### JWT Settings
@@ -349,6 +387,8 @@ docker-compose down
 
 #### Local Development
 - **Lombok not working**: Ensure annotation processing is enabled in your IDE
+- **`Fatal error compiling: Cannot load from object array because "this.hashes" is null`**: this javac NPE hides the real compile errors. Run `./mvnw compile -Dmaven.compiler.fork=true` to see them (e.g. APIs removed in Spring Security 7)
+- **`release version 25 not supported`**: Your `JAVA_HOME` points to an older JDK, switch to JDK 25
 - **Database connection failed**: Check MySQL is running and credentials are correct
 - **Token validation failed**: Verify secret key configuration matches
 
@@ -410,6 +450,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 For more information about Spring Boot and JWT authentication, visit:
 
-- [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
+- [Spring Boot Documentation](https://docs.spring.io/spring-boot/index.html)
 - [JWT Introduction](https://jwt.io/introduction/)
 - [Spring Security Reference](https://docs.spring.io/spring-security/reference/)
