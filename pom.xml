@@ -14,7 +14,7 @@
     <name>springboot-jwt-auth</name>
     <description>springboot-jwt-auth</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
     </properties>
     <dependencies>
         <dependency>

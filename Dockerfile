@@ -1,5 +1,5 @@
 # Multi-stage build for Spring Boot application
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -22,7 +22,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 # Set working directory
 WORKDIR /app
